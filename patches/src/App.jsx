@@ -20,6 +20,7 @@ export default function App() {
   const [selection, setSelection] = useState(null);
   const [dragStart, setDragStart] = useState(null);
   const [solved, setSolved] = useState(false);
+  const [winModalVisible, setWinModalVisible] = useState(false);
   const [nextId, setNextId] = useState(0);
   const [toast, setToast] = useState('');
   const [moves, setMoves] = useState(0);
@@ -56,6 +57,7 @@ export default function App() {
     setSelection(null);
     setDragStart(null);
     setSolved(false);
+    setWinModalVisible(false);
     setNextId(0);
     setMoves(0);
     setTime(0);
@@ -93,10 +95,21 @@ export default function App() {
       } else {
         const clue = cluesInSel[0];
         const { paletteIdx, rectId, shapeHint, showNumber } = clue;
-        const correct = clue.area === drawnArea;
 
-        // Shape-type mismatch toast — only for tiles that show a number AND aren't 'any'
-        if (!correct && showNumber && shapeHint !== 'any') {
+        // For no-number clues: correct = shape type matches. For number clues: correct = area matches.
+        let correct;
+        if (!showNumber) {
+          if (shapeHint === 'any') correct = true;
+          else if (shapeHint === 'square') correct = drawnRows === drawnCols;
+          else if (shapeHint === 'tall') correct = drawnRows > drawnCols;
+          else if (shapeHint === 'wide') correct = drawnCols > drawnRows;
+          else correct = false;
+        } else {
+          correct = clue.area === drawnArea;
+        }
+
+        // Shape-type mismatch toast for any incorrect placement with a non-'any' shape hint
+        if (!correct && shapeHint !== 'any') {
           let shapeOk = true;
           if (shapeHint === 'square') shapeOk = drawnRows === drawnCols;
           else if (shapeHint === 'tall') shapeOk = drawnRows > drawnCols;
@@ -108,7 +121,7 @@ export default function App() {
         }
 
         const id = nextId;
-        const newRect = { id, r1, c1, r2, c2, paletteIdx, rectId, correct, drawnArea };
+        const newRect = { id, r1, c1, r2, c2, paletteIdx, rectId, correct, drawnArea, showNumber };
         const newPR = [...playerRects, newRect];
         const newPG = playerGrid.map(row => [...row]);
         for (let r = r1; r <= r2; r++)
@@ -125,8 +138,12 @@ export default function App() {
         setMoves(m => m + 1);
 
         // Only solve when every cell filled AND every placed rect is correct
-        if (newPG.every(row => row.every(v => v !== -1)) && newPR.every(r => r.correct)) {
+        const allFilled = newPG.every(row => row.every(v => v !== -1));
+        const allCorrect = newPR.every(rect => rect.correct);
+        console.log('win check — allFilled:', allFilled, 'allCorrect:', allCorrect, 'rects:', newPR.map(r => r.correct));
+        if (allFilled && allCorrect) {
           setSolved(true);
+          setWinModalVisible(true);
         }
       }
     }
@@ -212,7 +229,8 @@ export default function App() {
         <h1>Patches</h1>
         <p className="sub">Fill every cell — each number is the area of its rectangle</p>
 
-        <div className="topbar">
+        <div className="topbar" style={{ width: GRID_SIZE }}>
+          <div className="timer">{formatTime(time)}</div>
           <div className="diff-grp">
             {['easy','medium','hard'].map(d => (
               <button key={d} className={`db ${difficulty===d?'da':'di'}`} onClick={() => setDifficulty(d)}>
@@ -220,11 +238,6 @@ export default function App() {
               </button>
             ))}
           </div>
-          <div className="sep"/>
-          <div className="timer">{formatTime(time)}</div>
-          <div className="sep"/>
-          <button className="ab" onClick={handleReset}>↺ Reset</button>
-          <button className="nb" onClick={newPuzzle}>New puzzle</button>
         </div>
 
         <div className="stats">
@@ -252,7 +265,7 @@ export default function App() {
                 borderRadius: 5, zIndex: 2,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                {!rect.correct && (
+                {!rect.correct && rect.showNumber && (
                   <span style={{
                     fontFamily:"'Libre Baskerville',serif", fontWeight:700,
                     fontSize: Math.min(FONT + 2, 22), color:'rgba(180,30,30,0.75)',
@@ -319,13 +332,11 @@ export default function App() {
           ))}
         </div>
 
-        {solved && (
-          <div className="sb">
-            <div className="st">🎉 Solved!</div>
-            <div className="ss">Finished in {formatTime(time)} · {moves} move{moves!==1?'s':''} · {rectangles.length} shapes</div>
-            <button className="snb" onClick={newPuzzle}>Next puzzle →</button>
-          </div>
-        )}
+        <div className="btn-row" style={{ width: GRID_SIZE }}>
+          <button className="ab" onClick={handleReset}>↺ Reset</button>
+          <button className="nb" onClick={newPuzzle}>New puzzle</button>
+        </div>
+
 
         <p className="hint">
           <strong>Drag</strong> from a tile to draw its rectangle · Area must match the number · <strong>Click</strong> a filled region to erase
@@ -350,6 +361,19 @@ export default function App() {
       </div>
 
       <div className="toast" style={{ opacity: toast ? 1 : 0 }}>{toast}</div>
+
+      {solved && winModalVisible && (
+        <div className="modal-overlay" onClick={() => setWinModalVisible(false)}>
+          <div className="sb" onClick={e => e.stopPropagation()}>
+            <div className="st">🎉 Solved!</div>
+            <div className="ss">Finished in {formatTime(time)} · {moves} move{moves!==1?'s':''} · {rectangles.length} shapes</div>
+            <div className="modal-btns">
+              <button className="snb" onClick={newPuzzle}>Next puzzle →</button>
+              <button className="snb-sec" onClick={() => setWinModalVisible(false)}>Show board</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

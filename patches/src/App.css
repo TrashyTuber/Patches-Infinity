@@ -3,6 +3,13 @@
 *,*::before,*::after { box-sizing: border-box; }
 body { margin: 0; background: #C8D8E8; }
 
+#root {
+  width: 100%;
+  max-width: 100%;
+  border-inline: none;
+  text-align: unset;
+}
+
 .root {
   min-height: 100vh;
   display: flex;
@@ -27,10 +34,8 @@ h1 {
 .topbar {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
   margin-bottom: 14px;
-  flex-wrap: wrap;
-  justify-content: center;
 }
 
 .diff-grp { display: flex; gap: 5px; }
@@ -49,7 +54,19 @@ h1 {
 .di { background: rgba(255,255,255,0.5); color: #607080; border-color: rgba(255,255,255,0.8); }
 .di:hover { border-color: #18182A; color: #18182A; background: rgba(255,255,255,0.8); }
 
-.sep { width: 1px; height: 22px; background: rgba(255,255,255,0.6); flex-shrink: 0; }
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.btn-row .ab,
+.btn-row .nb {
+  flex: 1;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 10px;
+  text-align: center;
+}
 
 .ab {
   background: rgba(255,255,255,0.5);
@@ -80,17 +97,15 @@ h1 {
 .nb:hover { background: #2D2D42; }
 
 .timer {
-  font-family: 'Libre Baskerville', serif;
-  font-size: 15px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
   color: #18182A;
-  font-weight: 700;
-  letter-spacing: 1px;
-  background: rgba(255,255,255,0.7);
-  border: 1.5px solid rgba(255,255,255,0.9);
-  border-radius: 8px;
-  padding: 4px 14px;
-  min-width: 64px;
-  text-align: center;
+  letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.5);
+  border: 1.5px solid rgba(255,255,255,0.8);
+  border-radius: 20px;
+  padding: 5px 14px;
 }
 
 .stats { display: flex; gap: 18px; margin-bottom: 12px; font-size: 12px; color: #607080; font-weight: 300; }
@@ -138,14 +153,24 @@ h1 {
   overflow: hidden;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
 .sb {
-  margin-top: 20px;
   background: #18182A;
   color: #EEF2F5;
   border-radius: 12px;
-  padding: 20px 36px;
+  padding: 28px 40px;
   text-align: center;
   animation: pop .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 260px;
 }
 @keyframes pop {
   from { opacity: 0; transform: scale(0.85) translateY(8px); }
@@ -154,18 +179,34 @@ h1 {
 
 .st { font-family: 'Libre Baskerville', serif; font-size: 22px; margin-bottom: 4px; }
 .ss { font-size: 13px; opacity: .55; margin-bottom: 14px; }
+.modal-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
 .snb {
   background: #EEF2F5;
   color: #18182A;
   border: none;
   border-radius: 8px;
-  padding: 8px 22px;
+  padding: 10px 22px;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
   font-size: 13px;
 }
 .snb:hover { background: #fff; }
+
+.snb-sec {
+  background: transparent;
+  color: rgba(238,242,245,0.6);
+  border: 1.5px solid rgba(238,242,245,0.25);
+  border-radius: 8px;
+  padding: 10px 22px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all .15s;
+}
+.snb-sec:hover { color: #EEF2F5; border-color: rgba(238,242,245,0.6); }
 
 .toast {
   position: fixed;
