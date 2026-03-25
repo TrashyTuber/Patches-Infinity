@@ -1,134 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-
-// Soft pastel palette matching LinkedIn Patches aesthetic
-const PALETTE = [
-  '#E8A0A8', // rose
-  '#A0C8E8', // sky blue
-  '#A8D4A0', // sage green
-  '#E8C8A0', // peach
-  '#B8A8D8', // lavender
-  '#80C4B8', // teal
-  '#E8B880', // warm orange
-  '#A8B8D8', // steel blue
-  '#C8D890', // yellow green
-  '#D4A8C0', // mauve
-  '#98C8D0', // powder blue
-  '#D8B890', // tan
-  '#B0D0A8', // mint
-  '#C0A8D8', // periwinkle
-];
-
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function rectWeight(area, targetArea) {
-  if (area < 2) return 0;
-  const sigma = targetArea * 0.75;
-  return Math.exp(-0.5 * ((area - targetArea) / sigma) ** 2);
-}
-
-function attemptGenerate(size, targetCount) {
-  const grid = Array.from({ length: size }, () => Array(size).fill(-1));
-  const rects = [];
-  let id = 0;
-  const targetArea = (size * size) / targetCount;
-
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (grid[r][c] !== -1) continue;
-      const candidates = [];
-      for (let c2 = c; c2 < size; c2++) {
-        if (grid[r][c2] !== -1) break;
-        let maxR2 = r;
-        expand: while (maxR2 + 1 < size) {
-          for (let cc = c; cc <= c2; cc++) {
-            if (grid[maxR2 + 1][cc] !== -1) break expand;
-          }
-          maxR2++;
-        }
-        for (let r2 = r; r2 <= maxR2; r2++) {
-          const area = (r2 - r + 1) * (c2 - c + 1);
-          candidates.push({ r2, c2, area });
-        }
-      }
-      if (candidates.length === 0) candidates.push({ r2: r, c2: c, area: 1 });
-
-      const weights = candidates.map(cd => rectWeight(cd.area, targetArea));
-      const total = weights.reduce((a, b) => a + b, 0);
-      let chosen = candidates[0];
-      if (total > 0) {
-        let rand = Math.random() * total;
-        for (let i = 0; i < candidates.length; i++) {
-          rand -= weights[i];
-          if (rand <= 0) { chosen = candidates[i]; break; }
-        }
-      }
-      const { r2, c2, area } = chosen;
-      for (let rr = r; rr <= r2; rr++)
-        for (let cc = c; cc <= c2; cc++)
-          grid[rr][cc] = id;
-      rects.push({ id, r1: r, c1: c, r2, c2, area, rows: r2-r+1, cols: c2-c+1 });
-      id++;
-    }
-  }
-  return rects;
-}
-
-// Determine the generalized shape hint for the tile SVG
-// Returns: 'square' | 'tall' | 'wide' | 'any'
-// ~30% of non-square rects randomly become 'any'
-function getShapeHint(rows, cols, seed) {
-  if (rows === cols) return 'square';
-  // Use seed for determinism per-rect
-  const rng = (seed * 9301 + 49297) % 233280;
-  if ((rng / 233280) < 0.30) return 'any';
-  return rows > cols ? 'tall' : 'wide';
-}
-
-function generatePuzzle(size) {
-  const targetMin = size;
-  const targetMax = Math.round(size * 1.45);
-  const targetCount = Math.round((targetMin + targetMax) / 2);
-
-  let rects;
-  for (let attempt = 0; attempt < 120; attempt++) {
-    rects = attemptGenerate(size, targetCount);
-    const count = rects.length;
-    const hasOnes = rects.some(r => r.area === 1);
-    if (!hasOnes && count >= targetMin && count <= targetMax) break;
-  }
-
-  const paletteIndices = shuffle([...Array(PALETTE.length).keys()]);
-  const rectColors = {};
-  rects.forEach((rect, i) => { rectColors[rect.id] = paletteIndices[i % PALETTE.length]; });
-
-  const clues = {};
-  rects.forEach(rect => {
-    const cells = [];
-    for (let r = rect.r1; r <= rect.r2; r++)
-      for (let c = rect.c1; c <= rect.c2; c++)
-        cells.push([r, c]);
-    const [nr, nc] = cells[Math.floor(Math.random() * cells.length)];
-    const shapeHint = getShapeHint(rect.rows, rect.cols, rect.id * 137 + nr * 31 + nc);
-    // ~40% of tiles hide the number — only shape hint shown
-    const numRng = ((rect.id * 6271 + nr * 1481 + nc * 331) % 1000) / 1000;
-    const showNumber = numRng >= 0.40;
-    clues[`${nr},${nc}`] = {
-      area: rect.area, rectId: rect.id,
-      paletteIdx: rectColors[rect.id],
-      rows: rect.rows, cols: rect.cols,
-      shapeHint, showNumber,
-    };
-  });
-
-  return { size, clues, rectangles: rects, rectColors };
-}
+import { PALETTE, generatePuzzle } from "./puzzleGenerator";
+import ShapeHintSVG from "./ShapeHintSVG";
+import "./App.css";
 
 function normalize(r1, c1, r2, c2) {
   return { r1: Math.min(r1,r2), c1: Math.min(c1,c2), r2: Math.max(r1,r2), c2: Math.max(c1,c2) };
@@ -335,51 +208,6 @@ export default function App() {
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,600&display=swap');
-        *,*::before,*::after{box-sizing:border-box}
-        body{margin:0;background:#C8D8E8}
-        .root{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px;font-family:'DM Sans',sans-serif;background:linear-gradient(145deg,#B8CCE0 0%,#C4D4C4 50%,#D0C8D8 100%)}
-        h1{font-family:'Libre Baskerville',serif;font-size:clamp(26px,5vw,38px);color:#18182A;margin:0 0 3px;letter-spacing:-0.5px}
-        .sub{font-size:12.5px;color:#607080;margin:0 0 18px;font-weight:300}
-        .topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
-        .diff-grp{display:flex;gap:5px}
-        .db{padding:5px 14px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
-        .da{background:#18182A;color:#EEF2F5;border-color:#18182A}
-        .di{background:rgba(255,255,255,0.5);color:#607080;border-color:rgba(255,255,255,0.8)}
-        .di:hover{border-color:#18182A;color:#18182A;background:rgba(255,255,255,0.8)}
-        .sep{width:1px;height:22px;background:rgba(255,255,255,0.6);flex-shrink:0}
-        .ab{background:rgba(255,255,255,0.5);border:1.5px solid rgba(255,255,255,0.8);border-radius:8px;padding:5px 13px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:#607080;transition:all .15s}
-        .ab:hover{border-color:#18182A;color:#18182A;background:rgba(255,255,255,0.8)}
-        .nb{background:#18182A;color:#EEF2F5;border:none;border-radius:8px;padding:5px 15px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;transition:all .15s}
-        .nb:hover{background:#2D2D42}
-        .timer{font-family:'Libre Baskerville',serif;font-size:15px;color:#18182A;font-weight:700;letter-spacing:1px;background:rgba(255,255,255,0.7);border:1.5px solid rgba(255,255,255,0.9);border-radius:8px;padding:4px 14px;min-width:64px;text-align:center}
-        .stats{display:flex;gap:18px;margin-bottom:12px;font-size:12px;color:#607080;font-weight:300}
-        .sv{font-weight:600;color:#18182A}
-        .pw{height:4px;background:rgba(255,255,255,0.4);border-radius:2px;margin-bottom:14px}
-        .pb{height:100%;background:#18182A;border-radius:2px;transition:width .35s ease}
-        .gw{position:relative;background:#FAFAF8;border:2px solid #18182A;border-radius:8px;overflow:hidden;cursor:crosshair;user-select:none;-webkit-user-select:none}
-        .gr{display:flex}
-        .cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid #E6E0D8;border-bottom:1px solid #E6E0D8;flex-shrink:0}
-        .cell:last-child{border-right:none}
-        .gr:last-child .cell{border-bottom:none}
-        .ov{position:absolute;pointer-events:none}
-        .ct{display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:'Libre Baskerville',serif;font-weight:700;color:#fff;position:absolute;z-index:7;pointer-events:none;overflow:hidden}
-        .sb{margin-top:20px;background:#18182A;color:#EEF2F5;border-radius:12px;padding:20px 36px;text-align:center;animation:pop .4s cubic-bezier(0.34,1.56,0.64,1)}
-        @keyframes pop{from{opacity:0;transform:scale(0.85) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-        .st{font-family:'Libre Baskerville',serif;font-size:22px;margin-bottom:4px}
-        .ss{font-size:13px;opacity:.55;margin-bottom:14px}
-        .snb{background:#EEF2F5;color:#18182A;border:none;border-radius:8px;padding:8px 22px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px}
-        .snb:hover{background:#fff}
-        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#18182A;color:#EEF2F5;padding:9px 20px;border-radius:10px;font-size:13px;white-space:nowrap;pointer-events:none;transition:opacity .2s;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,0.2)}
-        .hint{font-size:11.5px;color:#708090;margin-top:14px;text-align:center;line-height:1.8;font-weight:300}
-        .hint strong{color:#4A5868;font-weight:500}
-        .legend{display:flex;gap:0;background:rgba(255,255,255,0.55);border-radius:10px;padding:10px 16px;margin-top:14px;align-items:center;flex-wrap:wrap;justify-content:center;gap:6px 18px}
-        .legend-item{display:flex;align-items:center;gap:8px;font-size:11.5px;color:#4A5868;font-weight:400}
-        .legend-tile{position:relative;border-radius:6px;flex-shrink:0;overflow:hidden;background:#A0A8B0}
-        .legend-label{white-space:nowrap}
-      `}</style>
-
       <div className="root" onMouseLeave={() => { setDragStart(null); setSelection(null); }}>
         <h1>Patches</h1>
         <p className="sub">Fill every cell — each number is the area of its rectangle</p>
@@ -411,7 +239,7 @@ export default function App() {
 
         <div className="gw" style={{ width: GRID_SIZE, height: GRID_SIZE }}>
 
-          {/* Placed rectangles — green/color if correct, red if wrong */}
+          {/* Placed rectangles — color if correct, red if wrong */}
           {playerRects.map(rect => {
             const col = rect.correct ? PALETTE[rect.paletteIdx] : null;
             const w = (rect.c2-rect.c1+1)*CELL;
@@ -523,68 +351,5 @@ export default function App() {
 
       <div className="toast" style={{ opacity: toast ? 1 : 0 }}>{toast}</div>
     </>
-  );
-}
-
-function ShapeHintSVG({ shapeHint, tileSize, legendMode = false }) {
-  const T = tileSize;
-  const stroke = legendMode ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.90)';
-  const fill = legendMode ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.28)';
-  const dash = '3.5,2';
-  const sw = legendMode ? 2.0 : 1.6;
-  const svgStyle = { position:'absolute', inset:0, width:'100%', height:'100%', pointerEvents:'none' };
-
-  if (shapeHint === 'square') {
-    // Clean square, no dividers, big
-    const S = T * 0.62;
-    const ox = (T-S)/2, oy = (T-S)/2;
-    return (
-      <svg style={svgStyle} viewBox={`0 0 ${T} ${T}`}>
-        <rect x={ox} y={oy} width={S} height={S} fill={fill} rx={3.5}
-          stroke={stroke} strokeWidth={sw} strokeDasharray={dash}/>
-      </svg>
-    );
-  }
-
-  if (shapeHint === 'tall') {
-    // Tall narrow rect, no dividers, clearly taller than wide
-    const W = T * 0.30, H = T * 0.66;
-    const ox = (T-W)/2, oy = (T-H)/2;
-    return (
-      <svg style={svgStyle} viewBox={`0 0 ${T} ${T}`}>
-        <rect x={ox} y={oy} width={W} height={H} fill={fill} rx={3.5}
-          stroke={stroke} strokeWidth={sw} strokeDasharray={dash}/>
-      </svg>
-    );
-  }
-
-  if (shapeHint === 'wide') {
-    // Wide short rect, no dividers, clearly wider than tall
-    const W = T * 0.66, H = T * 0.30;
-    const ox = (T-W)/2, oy = (T-H)/2;
-    return (
-      <svg style={svgStyle} viewBox={`0 0 ${T} ${T}`}>
-        <rect x={ox} y={oy} width={W} height={H} fill={fill} rx={3.5}
-          stroke={stroke} strokeWidth={sw} strokeDasharray={dash}/>
-      </svg>
-    );
-  }
-
-  // 'any' — medium filled square with a dashed outer ring offset from it,
-  // clearly distinct from the plain square hint
-  const sq = T * 0.38;
-  const sqo = (T-sq)/2;
-  const ringPad = T * 0.09;
-  const rox = sqo - ringPad, roy = sqo - ringPad;
-  const rw = sq + ringPad*2, rh = sq + ringPad*2;
-  return (
-    <svg style={svgStyle} viewBox={`0 0 ${T} ${T}`}>
-      {/* Outer dashed ring */}
-      <rect x={rox} y={roy} width={rw} height={rh} fill="none" rx={5}
-        stroke={stroke} strokeWidth={sw} strokeDasharray="3.5,3" opacity={0.75}/>
-      {/* Solid inner square */}
-      <rect x={sqo} y={sqo} width={sq} height={sq} fill={fill} rx={3}
-        stroke={stroke} strokeWidth={sw}/>
-    </svg>
   );
 }
