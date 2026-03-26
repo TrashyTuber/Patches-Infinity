@@ -111,9 +111,9 @@ export function generatePuzzle(size) {
         cells.push([r, c]);
     const [nr, nc] = cells[Math.floor(Math.random() * cells.length)];
     const shapeHint = getShapeHint(rect.rows, rect.cols, rect.id * 137 + nr * 31 + nc);
-    // ~40% of tiles hide the number — only shape hint shown
+    // ~30% of tiles hide the number — only shape hint shown
     const numRng = ((rect.id * 6271 + nr * 1481 + nc * 331) % 1000) / 1000;
-    const showNumber = numRng >= 0.40;
+    const showNumber = numRng >= 0.30;
     clues[`${nr},${nc}`] = {
       area: rect.area, rectId: rect.id,
       paletteIdx: rectColors[rect.id],

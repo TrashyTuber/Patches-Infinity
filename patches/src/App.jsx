@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { PALETTE, generatePuzzle } from "./puzzleGenerator";
-import ShapeHintSVG from "./ShapeHintSVG";
 import "./App.css";
 
 function normalize(r1, c1, r2, c2) {
@@ -207,6 +206,7 @@ export default function App() {
 
   const progress = Math.round((playerGrid.flat().filter(v => v !== -1).length / (size*size)) * 100);
 
+
   // Map from rectId → wrong playerRect (for turning clue tile black)
   const wrongCoverageByRectId = {};
   for (const pr of playerRects) {
@@ -295,36 +295,59 @@ export default function App() {
                 const key = `${r},${c}`;
                 const clue = clues[key];
                 const col = clue ? PALETTE[clue.paletteIdx] : null;
+                const SQ  = Math.round(CELL * 0.62);
+                const LNG = Math.round(CELL * 0.78);
+                const SHT = Math.round(CELL * 0.44);
+                const tileW = clue?.shapeHint === 'tall' ? SHT : clue?.shapeHint === 'wide' ? LNG : SQ;
+                const tileH = clue?.shapeHint === 'wide' ? SHT : clue?.shapeHint === 'tall' ? LNG : SQ;
 
                 return (
                   <div key={c} className="cell"
-                    style={{ width: CELL, height: CELL }}
+                    style={{ width: CELL, height: CELL, background: col && playerGrid[r][c] === -1 && !(dragStart && selection && r >= selection.r1 && r <= selection.r2 && c >= selection.c1 && c <= selection.c2) ? col + '30' : undefined }}
                     onMouseDown={e => handleMouseDown(r,c,e)}
                     onMouseEnter={() => handleMouseEnter(r,c)}
                   >
-                    {clue && (
+                    {clue && clue.shapeHint === 'any' ? (<>
+                      <div style={{
+                        position:'absolute', zIndex:7, pointerEvents:'none',
+                        width: LNG, height: SHT,
+                        top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+                        background: col + '99', border:`1.5px dotted ${col}`, borderRadius:8,
+                      }}/>
+                      <div style={{
+                        position:'absolute', zIndex:7, pointerEvents:'none',
+                        width: SHT, height: LNG,
+                        top:'50%', left:'50%', transform:'translate(-50%,-50%)',
+                        background: col + '99', border:`1.5px dotted ${col}`, borderRadius:8,
+                      }}/>
+                      {clue.showNumber && (
+                        <span style={{
+                          position:'absolute', zIndex:8, pointerEvents:'none',
+                          fontFamily:"'Libre Baskerville',serif", fontWeight:700,
+                          fontSize: FONT, color:'#fff', lineHeight:1,
+                          textShadow:'0 1px 4px rgba(0,0,0,0.55)',
+                        }}>
+                          {clue.area}
+                        </span>
+                      )}
+                    </>) : clue ? (
                       <div className="ct" style={{
-                        width: TILE, height: TILE,
+                        width: tileW, height: tileH,
                         background: wrongCoverageByRectId[clue.rectId] ? '#1A1A1A' : col,
                         boxShadow: `0 2px 8px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.18)`,
                         transition: 'background 0.2s',
                       }}>
-                        <ShapeHintSVG shapeHint={clue.shapeHint} tileSize={TILE}/>
                         {clue.showNumber && (
                           <span style={{
-                            position:'relative', zIndex:3,
                             fontFamily:"'Libre Baskerville',serif",
                             fontWeight:700, fontSize: FONT, color:'#fff',
-                            lineHeight:1,
-                            background: 'rgba(0,0,0,0.28)',
-                            borderRadius: 4,
-                            padding: `${Math.round(FONT*0.08)}px ${Math.round(FONT*0.22)}px`,
+                            lineHeight:1, position:'relative',
                           }}>
                             {clue.area}
                           </span>
                         )}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 );
               })}
@@ -351,8 +374,20 @@ export default function App() {
             { hint: 'any', label: 'Any of the above' },
           ].map(({ hint, label }) => (
             <div key={hint} className="legend-item">
-              <div className="legend-tile" style={{ width: 32, height: 32 }}>
-                <ShapeHintSVG shapeHint={hint} tileSize={32} legendMode />
+              <div style={{ width: 32, height: 32, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                {hint === 'any' ? (
+                  <div style={{ position:'relative', width:32, height:32 }}>
+                    <div style={{ position:'absolute', width:27, height:14, top:'50%', left:'50%', transform:'translate(-50%,-50%)', background:'#A0A8B099', border:'1.5px dotted #A0A8B0', borderRadius:3 }}/>
+                    <div style={{ position:'absolute', width:14, height:27, top:'50%', left:'50%', transform:'translate(-50%,-50%)', background:'#A0A8B099', border:'1.5px dotted #A0A8B0', borderRadius:3 }}/>
+                  </div>
+                ) : (
+                  <div style={{
+                    background: '#A0A8B0',
+                    borderRadius: 5,
+                    width: hint === 'tall' ? 15 : 27,
+                    height: hint === 'wide' ? 15 : 27,
+                  }}/>
+                )}
               </div>
               <span className="legend-label">{label}</span>
             </div>
