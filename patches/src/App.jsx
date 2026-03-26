@@ -31,6 +31,11 @@ export default function App() {
   stateRef.current = { playerGrid, playerRects, puzzle, nextId, selection, dragStart, confirmedRectIds };
 
   const sizeMap = { easy: 5, medium: 7, hard: 9 };
+  const [customPanelOpen, setCustomPanelOpen] = useState(false);
+  const [customSize, setCustomSize] = useState(7);
+  const [customShapeCount, setCustomShapeCount] = useState(8);
+  const [customAnyPct, setCustomAnyPct] = useState(30);
+  const [customNoNumPct, setCustomNoNumPct] = useState(30);
 
   const showToast = msg => {
     setToast(msg);
@@ -47,8 +52,13 @@ export default function App() {
   }, [solved, puzzle]);
 
   const newPuzzle = useCallback(() => {
-    const size = sizeMap[difficulty];
-    const p = generatePuzzle(size);
+    const size = difficulty === 'custom' ? customSize : sizeMap[difficulty];
+    const opts = difficulty === 'custom' ? {
+      targetCount: customShapeCount,
+      anyProbability: customAnyPct / 100,
+      noNumberProbability: customNoNumPct / 100,
+    } : {};
+    const p = generatePuzzle(size, opts);
     setPuzzle(p);
     setPlayerGrid(Array.from({ length: size }, () => Array(size).fill(-1)));
     setPlayerRects([]);
@@ -61,9 +71,11 @@ export default function App() {
     setMoves(0);
     setTime(0);
     setToast('');
-  }, [difficulty]);
+  }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct]);
 
-  useEffect(() => { newPuzzle(); }, [difficulty]);
+  useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty]);
+
+  const handleCustomDone = () => { setCustomPanelOpen(false); newPuzzle(); };
 
   const finalize = () => {
     const { dragStart, selection, playerGrid, playerRects, puzzle, nextId, confirmedRectIds } = stateRef.current;
@@ -199,7 +211,7 @@ export default function App() {
   if (!puzzle || !playerGrid) return null;
 
   const { size, clues, rectangles } = puzzle;
-  const CELL = Math.min(60, Math.floor(430 / size));
+  const CELL = Math.min(76, Math.floor(540 / size));
   const GRID_SIZE = size * CELL;
   const TILE = Math.round(CELL * 0.76);
   const FONT = Math.min(Math.round(CELL * 0.30), 20);
@@ -226,19 +238,45 @@ export default function App() {
   return (
     <>
       <div className="root" onMouseLeave={() => { setDragStart(null); setSelection(null); }}>
-        <h1>Patches</h1>
+        <h1>Patches Infinity</h1>
         <p className="sub">Fill every cell — each number is the area of its rectangle</p>
 
         <div className="topbar" style={{ width: GRID_SIZE }}>
           <div className="timer">{formatTime(time)}</div>
           <div className="diff-grp">
             {['easy','medium','hard'].map(d => (
-              <button key={d} className={`db ${difficulty===d?'da':'di'}`} onClick={() => setDifficulty(d)}>
+              <button key={d} className={`db ${difficulty===d?'da':'di'}`} onClick={() => { setDifficulty(d); setCustomPanelOpen(false); }}>
                 {d[0].toUpperCase()+d.slice(1)}
               </button>
             ))}
+            <button className={`db ${difficulty==='custom'?'da':'di'}`} onClick={() => { if (difficulty !== 'custom') setDifficulty('custom'); setCustomPanelOpen(p => !p); }}>
+              Custom {difficulty === 'custom' && customPanelOpen ? '▲' : '▼'}
+            </button>
           </div>
         </div>
+
+        {difficulty === 'custom' && customPanelOpen && (
+          <div className="custom-panel" style={{ width: GRID_SIZE }}>
+            <div className="cp-row">
+              <label>Board size<span>{customSize}×{customSize}</span></label>
+              <input type="range" min={5} max={15} value={customSize} onChange={e => setCustomSize(+e.target.value)}/>
+            </div>
+            <div className="cp-row">
+              <label>Shapes<span>{customShapeCount}</span></label>
+              <input type="range" min={3} max={30} value={customShapeCount} onChange={e => setCustomShapeCount(+e.target.value)}/>
+            </div>
+            <div className="cp-row">
+              <label>Any shapes<span>{customAnyPct}%</span></label>
+              <input type="range" min={0} max={100} value={customAnyPct} onChange={e => setCustomAnyPct(+e.target.value)}/>
+            </div>
+            <div className="cp-row">
+              <label>No-number clues<span>{customNoNumPct}%</span></label>
+              <input type="range" min={0} max={100} value={customNoNumPct} onChange={e => setCustomNoNumPct(+e.target.value)}/>
+            </div>
+            <button className="nb" style={{ marginTop: 4 }} onClick={handleCustomDone}>Done</button>
+            <p className="cp-note">The amount for shapes, any-shapes, and no-number clues will vary slightly.</p>
+          </div>
+        )}
 
         <div className="stats">
           <span>Shapes: <span className="sv">{playerRects.length} / {rectangles.length}</span></span>
@@ -285,7 +323,18 @@ export default function App() {
               background: dragColor ? dragColor+'30' : 'rgba(24,24,42,0.07)',
               border: `2.5px dashed ${dragColor || 'rgba(24,24,42,0.35)'}`,
               borderRadius: 5, zIndex: 4,
-            }}/>
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                fontFamily: "'Libre Baskerville',serif", fontWeight: 700,
+                fontSize: FONT, lineHeight: 1,
+                color: dragColor || 'rgba(24,24,42,0.5)',
+                opacity: 0.75,
+                pointerEvents: 'none', userSelect: 'none',
+              }}>
+                {(selection.r2-selection.r1+1)*(selection.c2-selection.c1+1)}
+              </span>
+            </div>
           )}
 
           {/* Cells + clue tiles */}
@@ -325,7 +374,6 @@ export default function App() {
                           position:'absolute', zIndex:8, pointerEvents:'none',
                           fontFamily:"'Libre Baskerville',serif", fontWeight:700,
                           fontSize: FONT, color:'#fff', lineHeight:1,
-                          textShadow:'0 1px 4px rgba(0,0,0,0.55)',
                         }}>
                           {clue.area}
                         </span>

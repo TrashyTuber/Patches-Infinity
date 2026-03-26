@@ -78,18 +78,19 @@ function attemptGenerate(size, targetCount) {
 }
 
 // Returns: 'square' | 'tall' | 'wide' | 'any'
-// ~30% of non-square rects randomly become 'any'
-function getShapeHint(rows, cols, seed) {
+function getShapeHint(rows, cols, seed, anyProbability = 0.30) {
   if (rows === cols) return 'square';
   const rng = (seed * 9301 + 49297) % 233280;
-  if ((rng / 233280) < 0.30) return 'any';
+  if ((rng / 233280) < anyProbability) return 'any';
   return rows > cols ? 'tall' : 'wide';
 }
 
-export function generatePuzzle(size) {
+export function generatePuzzle(size, opts = {}) {
+  const { targetCount: customCount, anyProbability = 0.30, noNumberProbability = 0.30 } = opts;
+
   const targetMin = size;
   const targetMax = Math.round(size * 1.45);
-  const targetCount = Math.round((targetMin + targetMax) / 2);
+  const targetCount = customCount ?? Math.round((targetMin + targetMax) / 2);
 
   let rects;
   for (let attempt = 0; attempt < 120; attempt++) {
@@ -110,10 +111,9 @@ export function generatePuzzle(size) {
       for (let c = rect.c1; c <= rect.c2; c++)
         cells.push([r, c]);
     const [nr, nc] = cells[Math.floor(Math.random() * cells.length)];
-    const shapeHint = getShapeHint(rect.rows, rect.cols, rect.id * 137 + nr * 31 + nc);
-    // ~30% of tiles hide the number — only shape hint shown
+    const shapeHint = getShapeHint(rect.rows, rect.cols, rect.id * 137 + nr * 31 + nc, anyProbability);
     const numRng = ((rect.id * 6271 + nr * 1481 + nc * 331) % 1000) / 1000;
-    const showNumber = numRng >= 0.30;
+    const showNumber = numRng >= noNumberProbability;
     clues[`${nr},${nc}`] = {
       area: rect.area, rectId: rect.id,
       paletteIdx: rectColors[rect.id],
