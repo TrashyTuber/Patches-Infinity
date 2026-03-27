@@ -243,7 +243,7 @@ export default function App() {
   if (!puzzle || !playerGrid) return null;
 
   const { size, clues, rectangles } = puzzle;
-  const maxGridWidth = Math.min(540, winWidth - 32);
+  const maxGridWidth = Math.min(540, winWidth - 48);
   const CELL = Math.min(76, Math.floor(maxGridWidth / size));
   const GRID_SIZE = size * CELL;
   const TILE = Math.round(CELL * 0.76);
