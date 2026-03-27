@@ -255,16 +255,14 @@ export default function App() {
   };
 
   const handleUndo = () => {
-    setHistory(h => {
-      if (h.length === 0) return h;
-      const snap = h[h.length - 1];
-      setPlayerGrid(snap.playerGrid);
-      setPlayerRects(snap.playerRects);
-      setConfirmedRectIds(snap.confirmedRectIds);
-      setNextId(snap.nextId);
-      setSolved(false);
-      return h.slice(0, -1);
-    });
+    if (history.length === 0) return;
+    const snap = history[history.length - 1];
+    setPlayerGrid(snap.playerGrid);
+    setPlayerRects(snap.playerRects);
+    setConfirmedRectIds(snap.confirmedRectIds);
+    setNextId(snap.nextId);
+    setSolved(false);
+    setHistory(h => h.slice(0, -1));
   };
 
   const handleHint = () => {
