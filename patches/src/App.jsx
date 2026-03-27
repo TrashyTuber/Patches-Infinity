@@ -27,6 +27,8 @@ export default function App() {
   const toastRef = useRef(null);
   const timerRef = useRef(null);
   const stateRef = useRef({});
+  const gridRef = useRef(null);
+  const [winWidth, setWinWidth] = useState(window.innerWidth);
 
   stateRef.current = { playerGrid, playerRects, puzzle, nextId, selection, dragStart, confirmedRectIds };
 
@@ -50,6 +52,32 @@ export default function App() {
     }
     return () => clearInterval(timerRef.current);
   }, [solved, puzzle]);
+
+  useEffect(() => {
+    const handler = () => setWinWidth(window.innerWidth);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+
+  // Non-passive touch move so we can preventDefault and stop page scrolling
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const onMove = (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!target) return;
+      const r = parseInt(target.dataset.r);
+      const c = parseInt(target.dataset.c);
+      if (isNaN(r) || isNaN(c)) return;
+      const { dragStart } = stateRef.current;
+      if (!dragStart) return;
+      setSelection(normalize(dragStart.r, dragStart.c, r, c));
+    };
+    el.addEventListener('touchmove', onMove, { passive: false });
+    return () => el.removeEventListener('touchmove', onMove);
+  }, [puzzle]);
 
   const newPuzzle = useCallback(() => {
     const size = difficulty === 'custom' ? customSize : sizeMap[difficulty];
@@ -165,7 +193,11 @@ export default function App() {
 
   useEffect(() => {
     window.addEventListener('mouseup', finalize);
-    return () => window.removeEventListener('mouseup', finalize);
+    window.addEventListener('touchend', finalize);
+    return () => {
+      window.removeEventListener('mouseup', finalize);
+      window.removeEventListener('touchend', finalize);
+    };
   }, []);
 
   const handleMouseDown = (r, c, e) => {
@@ -211,7 +243,8 @@ export default function App() {
   if (!puzzle || !playerGrid) return null;
 
   const { size, clues, rectangles } = puzzle;
-  const CELL = Math.min(76, Math.floor(540 / size));
+  const maxGridWidth = Math.min(540, winWidth - 32);
+  const CELL = Math.min(76, Math.floor(maxGridWidth / size));
   const GRID_SIZE = size * CELL;
   const TILE = Math.round(CELL * 0.76);
   const FONT = Math.min(Math.round(CELL * 0.30), 20);
@@ -288,7 +321,7 @@ export default function App() {
           <div className="pb" style={{ width: `${progress}%` }}/>
         </div>
 
-        <div className="gw" style={{ width: GRID_SIZE, height: GRID_SIZE }}>
+        <div className="gw" ref={gridRef} style={{ width: GRID_SIZE, height: GRID_SIZE }}>
 
           {/* Placed rectangles — color if correct, red if wrong */}
           {playerRects.map(rect => {
@@ -352,9 +385,11 @@ export default function App() {
 
                 return (
                   <div key={c} className="cell"
+                    data-r={r} data-c={c}
                     style={{ width: CELL, height: CELL, background: col && playerGrid[r][c] === -1 && !(dragStart && selection && r >= selection.r1 && r <= selection.r2 && c >= selection.c1 && c <= selection.c2) ? col + '30' : undefined }}
                     onMouseDown={e => handleMouseDown(r,c,e)}
                     onMouseEnter={() => handleMouseEnter(r,c)}
+                    onTouchStart={e => handleMouseDown(r,c,e)}
                   >
                     {clue && clue.shapeHint === 'any' ? (<>
                       <div style={{

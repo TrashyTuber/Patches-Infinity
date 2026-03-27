@@ -123,6 +123,7 @@ h1 {
   cursor: crosshair;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
 }
 .gr { display: flex; }
 .cell {
@@ -311,3 +312,10 @@ h1 {
   text-align: center;
 }
 .legend-label { white-space: nowrap; }
+
+@media (max-width: 480px) {
+  .root { padding: 16px 12px; }
+  .db { padding: 5px 9px; font-size: 11px; }
+  .diff-grp { gap: 4px; }
+  .topbar { flex-wrap: wrap; gap: 6px; }
+}
