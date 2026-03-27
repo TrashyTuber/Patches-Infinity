@@ -27,6 +27,8 @@ export default function App() {
   const toastRef = useRef(null);
   const timerRef = useRef(null);
   const hintTimerRef = useRef(null);
+  const hintCooldownTimerRef = useRef(null);
+  const [hintCooldown, setHintCooldown] = useState(false);
   const stateRef = useRef({});
   const gridRef = useRef(null);
   const [winWidth, setWinWidth] = useState(window.innerWidth);
@@ -266,6 +268,7 @@ export default function App() {
   };
 
   const handleHint = () => {
+    if (hintCooldown) return;
     const { confirmedRectIds } = stateRef.current;
     const unsolved = puzzle.rectangles.filter(r => !confirmedRectIds.has(r.id));
     if (unsolved.length === 0) return;
@@ -273,6 +276,9 @@ export default function App() {
     setHintRectId(target.id);
     clearTimeout(hintTimerRef.current);
     hintTimerRef.current = setTimeout(() => setHintRectId(null), 2000);
+    setHintCooldown(true);
+    clearTimeout(hintCooldownTimerRef.current);
+    hintCooldownTimerRef.current = setTimeout(() => setHintCooldown(false), 10000);
   };
 
   if (!puzzle || !playerGrid) return null;
@@ -496,7 +502,10 @@ export default function App() {
 
         <div className="btn-row" style={{ width: GRID_SIZE }}>
           <button className="ab" onClick={handleUndo} disabled={history.length === 0}>↩ Undo</button>
-          <button className="ab" onClick={handleHint}>✦ Hint</button>
+          <button className="ab hint-btn" onClick={handleHint} disabled={hintCooldown}>
+            ✦ Hint
+            {hintCooldown && <span className="hint-cooldown-sweep"/>}
+          </button>
         </div>
 
         <p className="hint">
