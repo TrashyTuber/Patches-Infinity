@@ -1,18 +1,18 @@
 export const PALETTE = [
-  '#E8A0A8', // rose
-  '#A0C8E8', // sky blue
-  '#A8D4A0', // sage green
-  '#E8C8A0', // peach
-  '#B8A8D8', // lavender
-  '#80C4B8', // teal
-  '#E8B880', // warm orange
-  '#A8B8D8', // steel blue
-  '#C8D890', // yellow green
-  '#D4A8C0', // mauve
-  '#98C8D0', // powder blue
-  '#D8B890', // tan
-  '#B0D0A8', // mint
-  '#C0A8D8', // periwinkle
+  '#F0A0A0', // coral rose
+  '#F0B878', // warm peach
+  '#EED870', // golden yellow
+  '#C0E070', // lime
+  '#80C880', // grass green
+  '#80D4B0', // mint
+  '#48BCAA', // teal
+  '#78C8E0', // sky blue
+  '#6888D0', // cornflower blue
+  '#9878D0', // periwinkle
+  '#C080C8', // lavender
+  '#D870A8', // magenta
+  '#E898B0', // soft pink
+  '#D89068', // terracotta
 ];
 
 function shuffle(arr) {

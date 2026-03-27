@@ -4,16 +4,37 @@ import "./App.css";
 
 const THEMES = {
   default: {
-    id: 'default', label: 'Default', swatch: '#E8A0A8',
-    palette: ['#E8A0A8','#A0C8E8','#A8D4A0','#E8C8A0','#B8A8D8','#80C4B8','#E8B880','#A8B8D8','#C8D890','#D4A8C0','#98C8D0','#D8B890','#B0D0A8','#C0A8D8'],
+    id: 'default', label: 'Default', swatch: '#F0A0A0',
+    //          red          peach        gold         lime
+    palette: ['#F0A0A0', '#F0B878', '#EED870', '#C0E070',
+    //          green        mint         teal         sky
+              '#80C880', '#80D4B0', '#48BCAA', '#78C8E0',
+    //          blue         periwinkle   lavender     magenta
+              '#6888D0', '#9878D0', '#C080C8', '#D870A8',
+    //          pink         terracotta
+              '#E898B0', '#D89068'],
   },
   classic: {
-    id: 'classic', label: 'Classic', swatch: '#D93535',
-    palette: ['#D93535','#2AABB5','#35B86A','#C89A20','#35B5E8','#9068CC','#E83575','#F07828','#E05840','#2880D0','#30B878','#E09030','#C02858','#60C0A0'],
+    id: 'classic', label: 'Classic', swatch: '#E03030',
+    //          red          orange       gold         lime
+    palette: ['#E03030', '#E07020', '#E0B820', '#90C820',
+    //          green        emerald      teal         cyan
+              '#18B050', '#30C898', '#18A898', '#18B8D8',
+    //          blue         indigo       purple       magenta
+              '#1868D8', '#5830C8', '#A018C0', '#C018A0',
+    //          crimson      amber
+              '#E01858', '#D88820'],
   },
   night: {
-    id: 'night', label: 'Night', swatch: '#5898D4',
-    palette: ['#E06878','#5898D4','#5AAA70','#C8A848','#8888D8','#58B8A0','#D88858','#7078C8','#C07898','#68A880','#D0A860','#9878B8','#78A8C8','#C89068'],
+    id: 'night', label: 'Night', swatch: '#5888E0',
+    //          coral        orange       gold         lime
+    palette: ['#EE7878', '#EE9840', '#E8C840', '#A8D040',
+    //          green        mint         teal         sky
+              '#48C068', '#80D8B0', '#38B8A0', '#48B8D8',
+    //          blue         indigo       purple       magenta
+              '#5888E0', '#8060D8', '#B048C0', '#D04898',
+    //          pink         terracotta
+              '#E06888', '#E07048'],
   },
 };
 
