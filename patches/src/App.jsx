@@ -325,11 +325,6 @@ export default function App() {
           </div>
         </div>
 
-        <div className="btn-row" style={{ width: GRID_SIZE }}>
-          <button className="ab" onClick={handleReset}>↺ Reset</button>
-          <button className="nb" onClick={newPuzzle}>New puzzle</button>
-        </div>
-
         {difficulty === 'custom' && customPanelOpen && (
           <div className="custom-panel" style={{ width: GRID_SIZE }}>
             <div className="cp-row">
@@ -361,6 +356,11 @@ export default function App() {
 
         <div className="pw" style={{ width: GRID_SIZE }}>
           <div className="pb" style={{ width: `${progress}%` }}/>
+        </div>
+
+        <div className="btn-row" style={{ width: GRID_SIZE }}>
+          <button className="ab" onClick={handleReset}>↺ Reset</button>
+          <button className="nb" onClick={newPuzzle}>New puzzle</button>
         </div>
 
         <div className="gw" ref={gridRef} style={{ width: GRID_SIZE, height: GRID_SIZE }}>
