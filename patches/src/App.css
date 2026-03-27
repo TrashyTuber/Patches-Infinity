@@ -352,23 +352,23 @@ h1 {
 
 /* ── Classic theme ── */
 body[data-theme="classic"] { background: #FFFFFF; }
-[data-theme="classic"].root { background: #FFFFFF; }
+body[data-theme="classic"] .root { background: #FFFFFF; }
 
 [data-theme="classic"] h1 { color: #1A1A1A; }
 [data-theme="classic"] .sub { color: #888888; }
 
 [data-theme="classic"] .timer {
-  background: #FFFFFF; border-color: #D0D0D0; color: #1A1A1A;
+  background: #FFFFFF; border: 2px solid #C0C0C0; color: #1A1A1A;
 }
 
 [data-theme="classic"] .db.di {
-  background: #FFFFFF; border-color: #D0D0D0; color: #555555;
+  background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555;
 }
 [data-theme="classic"] .db.di:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .db.da { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
 
 [data-theme="classic"] .ab {
-  background: #FFFFFF; border-color: #D0D0D0; color: #555555;
+  background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555;
 }
 [data-theme="classic"] .ab:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .ab:disabled:hover { border-color: #D0D0D0; color: #555555; background: #FFFFFF; }
@@ -397,7 +397,7 @@ body[data-theme="classic"] { background: #FFFFFF; }
 [data-theme="classic"] .legend { background: #F5F5F5; }
 [data-theme="classic"] .legend-item { color: #555555; }
 
-[data-theme="classic"] .theme-btn { background: #FFFFFF; border-color: #D0D0D0; color: #555555; }
+[data-theme="classic"] .theme-btn { background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555; }
 [data-theme="classic"] .theme-btn:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .theme-btn.theme-active { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
 
@@ -409,7 +409,7 @@ body[data-theme="classic"] { background: #FFFFFF; }
 /* ── Night theme ── */
 /* Mirrors the Default's blue-sage-lavender gradient, darkened */
 body[data-theme="night"] { background: #1C2430; }
-[data-theme="night"].root {
+body[data-theme="night"] .root {
   background: linear-gradient(145deg, #1C2A38 0%, #1E2C1E 50%, #2A1E2C 100%);
 }
 
