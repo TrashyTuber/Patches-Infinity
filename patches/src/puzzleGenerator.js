@@ -86,7 +86,8 @@ function getShapeHint(rows, cols, seed, anyProbability = 0.30) {
 }
 
 export function generatePuzzle(size, opts = {}) {
-  const { targetCount: customCount, anyProbability = 0.30, noNumberProbability = 0.30 } = opts;
+  const { targetCount: customCount, anyProbability = 0.30, noNumberProbability = 0.30, palette: customPalette } = opts;
+  const activePalette = customPalette || PALETTE;
 
   const targetMin = size;
   const targetMax = Math.round(size * 1.45);
@@ -100,9 +101,9 @@ export function generatePuzzle(size, opts = {}) {
     if (!hasOnes && count >= targetMin && count <= targetMax) break;
   }
 
-  const paletteIndices = shuffle([...Array(PALETTE.length).keys()]);
+  const paletteIndices = shuffle([...Array(activePalette.length).keys()]);
   const rectColors = {};
-  rects.forEach((rect, i) => { rectColors[rect.id] = paletteIndices[i % PALETTE.length]; });
+  rects.forEach((rect, i) => { rectColors[rect.id] = paletteIndices[i % activePalette.length]; });
 
   const clues = {};
   rects.forEach(rect => {
@@ -122,5 +123,5 @@ export function generatePuzzle(size, opts = {}) {
     };
   });
 
-  return { size, clues, rectangles: rects, rectColors };
+  return { size, clues, rectangles: rects, rectColors, palette: activePalette };
 }

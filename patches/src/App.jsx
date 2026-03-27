@@ -1,6 +1,21 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { PALETTE, generatePuzzle } from "./puzzleGenerator";
+import { generatePuzzle } from "./puzzleGenerator";
 import "./App.css";
+
+const THEMES = {
+  default: {
+    id: 'default', label: 'Default', swatch: '#E8A0A8',
+    palette: ['#E8A0A8','#A0C8E8','#A8D4A0','#E8C8A0','#B8A8D8','#80C4B8','#E8B880','#A8B8D8','#C8D890','#D4A8C0','#98C8D0','#D8B890','#B0D0A8','#C0A8D8'],
+  },
+  classic: {
+    id: 'classic', label: 'Classic', swatch: '#D93535',
+    palette: ['#D93535','#2AABB5','#35B86A','#C89A20','#35B5E8','#9068CC','#E83575','#F07828','#E05840','#2880D0','#30B878','#E09030','#C02858','#60C0A0'],
+  },
+  night: {
+    id: 'night', label: 'Night', swatch: '#5898D4',
+    palette: ['#E06878','#5898D4','#5AAA70','#C8A848','#8888D8','#58B8A0','#D88858','#7078C8','#C07898','#68A880','#D0A860','#9878B8','#78A8C8','#C89068'],
+  },
+};
 
 function normalize(r1, c1, r2, c2) {
   return { r1: Math.min(r1,r2), c1: Math.min(c1,c2), r2: Math.max(r1,r2), c2: Math.max(c1,c2) };
@@ -34,6 +49,9 @@ export default function App() {
   const [winWidth, setWinWidth] = useState(window.innerWidth);
   const [history, setHistory] = useState([]);
   const [hintRectId, setHintRectId] = useState(null);
+  const [theme, setTheme] = useState('default');
+
+  useEffect(() => { document.body.setAttribute('data-theme', theme); }, [theme]);
 
   stateRef.current = { playerGrid, playerRects, puzzle, nextId, selection, dragStart, confirmedRectIds };
 
@@ -90,7 +108,8 @@ export default function App() {
       targetCount: customShapeCount,
       anyProbability: customAnyPct / 100,
       noNumberProbability: customNoNumPct / 100,
-    } : {};
+      palette: THEMES[theme].palette,
+    } : { palette: THEMES[theme].palette };
     const p = generatePuzzle(size, opts);
     setPuzzle(p);
     setPlayerGrid(Array.from({ length: size }, () => Array(size).fill(-1)));
@@ -108,9 +127,9 @@ export default function App() {
     setHintRectId(null);
     clearTimeout(hintCooldownTimerRef.current);
     setHintCooldown(false);
-  }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct]);
+  }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct, theme]);
 
-  useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty]);
+  useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty, theme]);
 
   const handleCustomDone = () => { setCustomPanelOpen(false); newPuzzle(); };
 
@@ -307,7 +326,7 @@ export default function App() {
     outer: for (let r = selection.r1; r <= selection.r2; r++)
       for (let c = selection.c1; c <= selection.c2; c++) {
         const cl = clues[`${r},${c}`];
-        if (cl) { dragColor = PALETTE[cl.paletteIdx]; break outer; }
+        if (cl) { dragColor = puzzle.palette[cl.paletteIdx]; break outer; }
       }
   }
 
@@ -316,6 +335,15 @@ export default function App() {
       <div className="root" onMouseLeave={() => { setDragStart(null); setSelection(null); }}>
         <h1>Patches Infinity</h1>
         <p className="sub">Fill every cell — each number is the area of its rectangle</p>
+
+        <div className="theme-row" style={{ width: GRID_SIZE }}>
+          {Object.values(THEMES).map(t => (
+            <button key={t.id} className={`theme-btn${theme === t.id ? ' theme-active' : ''}`} onClick={() => setTheme(t.id)}>
+              <span className="theme-dot" style={{ background: t.swatch }}/>
+              {t.label}
+            </button>
+          ))}
+        </div>
 
         <div className="topbar" style={{ width: GRID_SIZE }}>
           <div className="timer">{formatTime(time)}</div>
@@ -373,7 +401,7 @@ export default function App() {
 
           {/* Placed rectangles — color if correct, red if wrong */}
           {playerRects.map(rect => {
-            const col = rect.correct ? PALETTE[rect.paletteIdx] : null;
+            const col = rect.correct ? puzzle.palette[rect.paletteIdx] : null;
             const w = (rect.c2-rect.c1+1)*CELL;
             const h = (rect.r2-rect.r1+1)*CELL;
             return (
@@ -440,7 +468,7 @@ export default function App() {
               {Array.from({length:size},(_,c) => {
                 const key = `${r},${c}`;
                 const clue = clues[key];
-                const col = clue ? PALETTE[clue.paletteIdx] : null;
+                const col = clue ? puzzle.palette[clue.paletteIdx] : null;
                 const SQ  = Math.round(CELL * 0.62);
                 const LNG = Math.round(CELL * 0.78);
                 const SHT = Math.round(CELL * 0.44);
