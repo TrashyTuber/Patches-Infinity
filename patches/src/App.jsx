@@ -106,6 +106,8 @@ export default function App() {
     setToast('');
     setHistory([]);
     setHintRectId(null);
+    clearTimeout(hintCooldownTimerRef.current);
+    setHintCooldown(false);
   }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct]);
 
   useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty]);
