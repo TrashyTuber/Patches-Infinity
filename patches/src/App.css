@@ -382,17 +382,17 @@ body[data-theme="classic"] .root {
 [data-theme="classic"] .sub { color: #888888; }
 
 [data-theme="classic"] .timer {
-  background: #FFFFFF; border: 2px solid #C0C0C0; color: #1A1A1A;
+  background: #FFFFFF; border: 1.5px solid #C0C0C0; color: #1A1A1A;
 }
 
 [data-theme="classic"] .db.di {
-  background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555;
+  background: #FFFFFF; border: 1.5px solid #C0C0C0; color: #555555;
 }
 [data-theme="classic"] .db.di:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .db.da { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
 
 [data-theme="classic"] .ab {
-  background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555;
+  background: #FFFFFF; border: 1.5px solid #C0C0C0; color: #555555;
 }
 [data-theme="classic"] .ab:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .ab:disabled:hover { border-color: #D0D0D0; color: #555555; background: #FFFFFF; }
@@ -404,7 +404,7 @@ body[data-theme="classic"] .root {
 [data-theme="classic"] .pw { background: #E8E8E8; }
 [data-theme="classic"] .pb { background: #1A1A1A; }
 
-[data-theme="classic"] .gw { background: #FFFFFF; box-shadow: 0 0 0 2px #C0C0C0; }
+[data-theme="classic"] .gw { background: #FFFFFF; box-shadow: 0 0 0 1.5px #C0C0C0; }
 [data-theme="classic"] .cell { border-right-color: #E8E8E8; border-bottom-color: #E8E8E8; }
 
 [data-theme="classic"] .custom-panel { background: #ECEAE4; }
@@ -418,10 +418,10 @@ body[data-theme="classic"] .root {
 [data-theme="classic"] .hint { color: #999999; }
 [data-theme="classic"] .hint strong { color: #555555; }
 
-[data-theme="classic"] .legend { background: transparent; border: 2px solid #C0C0C0; }
+[data-theme="classic"] .legend { background: transparent; border: 1.5px solid #C0C0C0; }
 [data-theme="classic"] .legend-item { color: #555555; }
 
-[data-theme="classic"] .theme-btn { background: #FFFFFF; border: 2px solid #C0C0C0; color: #555555; }
+[data-theme="classic"] .theme-btn { background: #FFFFFF; border: 1.5px solid #C0C0C0; color: #555555; }
 [data-theme="classic"] .theme-btn:hover { border-color: #1A1A1A; color: #1A1A1A; background: #F5F5F5; }
 [data-theme="classic"] .theme-btn.theme-active { background: #1A1A1A; color: #FFFFFF; border-color: #1A1A1A; }
 
