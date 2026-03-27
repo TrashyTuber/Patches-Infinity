@@ -461,11 +461,11 @@ export default function App() {
           {/* Placed rectangles — color if correct, red if wrong */}
           {playerRects.map(rect => {
             const col = rect.correct ? puzzle.palette[rect.paletteIdx] : null;
-            const w = (rect.c2-rect.c1+1)*CELL;
-            const h = (rect.r2-rect.r1+1)*CELL;
+            const w = (rect.c2-rect.c1+1)*CELL - 6;
+            const h = (rect.r2-rect.r1+1)*CELL - 6;
             return (
               <div key={`pr-${rect.id}`} className="ov" style={{
-                left: rect.c1*CELL, top: rect.r1*CELL, width: w, height: h,
+                left: rect.c1*CELL+3, top: rect.r1*CELL+3, width: w, height: h,
                 background: rect.correct ? col+'80' : 'rgba(220,60,60,0.18)',
                 border: `2px solid ${rect.correct ? col+'AA' : 'rgba(200,40,40,0.55)'}`,
                 borderRadius: 5, zIndex: 2,
