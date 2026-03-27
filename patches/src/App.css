@@ -81,6 +81,14 @@ h1 {
   transition: all .15s;
 }
 .ab:hover { border-color: #18182A; color: #18182A; background: rgba(255,255,255,0.8); }
+.ab:disabled { opacity: 0.38; cursor: not-allowed; }
+.ab:disabled:hover { border-color: rgba(255,255,255,0.8); color: #607080; background: rgba(255,255,255,0.5); }
+
+@keyframes hintPulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+.hint-overlay { animation: hintPulse 0.5s ease-in-out infinite alternate; }
 
 .nb {
   background: #18182A;

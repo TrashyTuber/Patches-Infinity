@@ -26,9 +26,12 @@ export default function App() {
   const [time, setTime] = useState(0);
   const toastRef = useRef(null);
   const timerRef = useRef(null);
+  const hintTimerRef = useRef(null);
   const stateRef = useRef({});
   const gridRef = useRef(null);
   const [winWidth, setWinWidth] = useState(window.innerWidth);
+  const [history, setHistory] = useState([]);
+  const [hintRectId, setHintRectId] = useState(null);
 
   stateRef.current = { playerGrid, playerRects, puzzle, nextId, selection, dragStart, confirmedRectIds };
 
@@ -99,6 +102,8 @@ export default function App() {
     setMoves(0);
     setTime(0);
     setToast('');
+    setHistory([]);
+    setHintRectId(null);
   }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct]);
 
   useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty]);
@@ -158,6 +163,13 @@ export default function App() {
             showToast(`Shape must be ${labels[shapeHint]}`);
           }
         }
+
+        setHistory(h => [...h, {
+          playerGrid: playerGrid.map(row => [...row]),
+          playerRects: [...playerRects],
+          confirmedRectIds: new Set(confirmedRectIds),
+          nextId,
+        }]);
 
         const id = nextId;
         const newRect = { id, r1, c1, r2, c2, paletteIdx, rectId, correct, drawnArea, showNumber };
@@ -237,7 +249,32 @@ export default function App() {
     setSolved(false);
     setNextId(0);
     setMoves(0);
+    setHistory([]);
+    setHintRectId(null);
     // Timer intentionally NOT reset — keeps running through board resets
+  };
+
+  const handleUndo = () => {
+    setHistory(h => {
+      if (h.length === 0) return h;
+      const snap = h[h.length - 1];
+      setPlayerGrid(snap.playerGrid);
+      setPlayerRects(snap.playerRects);
+      setConfirmedRectIds(snap.confirmedRectIds);
+      setNextId(snap.nextId);
+      setSolved(false);
+      return h.slice(0, -1);
+    });
+  };
+
+  const handleHint = () => {
+    const { confirmedRectIds } = stateRef.current;
+    const unsolved = puzzle.rectangles.filter(r => !confirmedRectIds.has(r.id));
+    if (unsolved.length === 0) return;
+    const target = unsolved[Math.floor(Math.random() * unsolved.length)];
+    setHintRectId(target.id);
+    clearTimeout(hintTimerRef.current);
+    hintTimerRef.current = setTimeout(() => setHintRectId(null), 2000);
   };
 
   if (!puzzle || !playerGrid) return null;
@@ -286,6 +323,11 @@ export default function App() {
               Custom {difficulty === 'custom' && customPanelOpen ? '▲' : '▼'}
             </button>
           </div>
+        </div>
+
+        <div className="btn-row" style={{ width: GRID_SIZE }}>
+          <button className="ab" onClick={handleReset}>↺ Reset</button>
+          <button className="nb" onClick={newPuzzle}>New puzzle</button>
         </div>
 
         {difficulty === 'custom' && customPanelOpen && (
@@ -370,6 +412,22 @@ export default function App() {
             </div>
           )}
 
+          {/* Hint overlay */}
+          {hintRectId !== null && (() => {
+            const rect = puzzle.rectangles.find(r => r.id === hintRectId);
+            if (!rect) return null;
+            return (
+              <div className="ov hint-overlay" style={{
+                left: rect.c1 * CELL, top: rect.r1 * CELL,
+                width: (rect.c2 - rect.c1 + 1) * CELL,
+                height: (rect.r2 - rect.r1 + 1) * CELL,
+                background: 'rgba(255,210,40,0.22)',
+                border: '2.5px solid rgba(220,160,0,0.65)',
+                borderRadius: 5, zIndex: 6,
+              }}/>
+            );
+          })()}
+
           {/* Cells + clue tiles */}
           {Array.from({length:size},(_,r) => (
             <div key={r} className="gr">
@@ -439,10 +497,9 @@ export default function App() {
         </div>
 
         <div className="btn-row" style={{ width: GRID_SIZE }}>
-          <button className="ab" onClick={handleReset}>↺ Reset</button>
-          <button className="nb" onClick={newPuzzle}>New puzzle</button>
+          <button className="ab" onClick={handleUndo} disabled={history.length === 0}>↩ Undo</button>
+          <button className="ab" onClick={handleHint}>✦ Hint</button>
         </div>
-
 
         <p className="hint">
           <strong>Drag</strong> from a tile to draw its rectangle · Area must match the number · <strong>Click</strong> a filled region to erase
