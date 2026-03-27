@@ -17,6 +17,20 @@ const THEMES = {
   },
 };
 
+const _initialSave = (() => {
+  try {
+    const raw = localStorage.getItem('patches-game');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s.puzzle || !s.playerGrid) return null;
+    return {
+      ...s,
+      confirmedRectIds: new Set(s.confirmedRectIds || []),
+      history: (s.history || []).map(h => ({ ...h, confirmedRectIds: new Set(h.confirmedRectIds || []) })),
+    };
+  } catch { return null; }
+})();
+
 function normalize(r1, c1, r2, c2) {
   return { r1: Math.min(r1,r2), c1: Math.min(c1,c2), r2: Math.max(r1,r2), c2: Math.max(c1,c2) };
 }
@@ -26,19 +40,19 @@ function formatTime(s) {
 }
 
 export default function App() {
-  const [difficulty, setDifficulty] = useState('medium');
-  const [puzzle, setPuzzle] = useState(null);
-  const [playerGrid, setPlayerGrid] = useState(null);
-  const [confirmedRectIds, setConfirmedRectIds] = useState(new Set());
-  const [playerRects, setPlayerRects] = useState([]);
+  const [difficulty, setDifficulty] = useState(_initialSave?.difficulty || 'medium');
+  const [puzzle, setPuzzle] = useState(_initialSave?.puzzle || null);
+  const [playerGrid, setPlayerGrid] = useState(_initialSave?.playerGrid || null);
+  const [confirmedRectIds, setConfirmedRectIds] = useState(_initialSave?.confirmedRectIds || new Set());
+  const [playerRects, setPlayerRects] = useState(_initialSave?.playerRects || []);
   const [selection, setSelection] = useState(null);
   const [dragStart, setDragStart] = useState(null);
-  const [solved, setSolved] = useState(false);
+  const [solved, setSolved] = useState(_initialSave?.solved || false);
   const [winModalVisible, setWinModalVisible] = useState(false);
-  const [nextId, setNextId] = useState(0);
+  const [nextId, setNextId] = useState(_initialSave?.nextId || 0);
   const [toast, setToast] = useState('');
-  const [moves, setMoves] = useState(0);
-  const [time, setTime] = useState(0);
+  const [moves, setMoves] = useState(_initialSave?.moves || 0);
+  const [time, setTime] = useState(_initialSave?.time || 0);
   const toastRef = useRef(null);
   const timerRef = useRef(null);
   const hintTimerRef = useRef(null);
@@ -46,14 +60,36 @@ export default function App() {
   const [hintCooldown, setHintCooldown] = useState(false);
   const stateRef = useRef({});
   const gridRef = useRef(null);
+  const hasRestoredGame = useRef(!!_initialSave);
   const [winWidth, setWinWidth] = useState(window.innerWidth);
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState(_initialSave?.history || []);
   const [hintRectId, setHintRectId] = useState(null);
-  const [theme, setTheme] = useState('default');
+  const [theme, setTheme] = useState(() => localStorage.getItem('patches-theme') || 'default');
 
-  useEffect(() => { document.body.setAttribute('data-theme', theme); }, [theme]);
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('patches-theme', theme);
+  }, [theme]);
 
   stateRef.current = { playerGrid, playerRects, puzzle, nextId, selection, dragStart, confirmedRectIds };
+
+  useEffect(() => {
+    if (!puzzle) return;
+    try {
+      localStorage.setItem('patches-game', JSON.stringify({
+        puzzle,
+        playerGrid,
+        playerRects,
+        confirmedRectIds: [...confirmedRectIds],
+        nextId,
+        moves,
+        time,
+        solved,
+        difficulty,
+        history: history.map(snap => ({ ...snap, confirmedRectIds: [...snap.confirmedRectIds] })),
+      }));
+    } catch {}
+  }, [puzzle, playerGrid, playerRects, confirmedRectIds, nextId, moves, time, solved, difficulty, history]);
 
   const sizeMap = { easy: 5, medium: 7, hard: 9 };
   const [customPanelOpen, setCustomPanelOpen] = useState(false);
@@ -129,7 +165,10 @@ export default function App() {
     setHintCooldown(false);
   }, [difficulty, customSize, customShapeCount, customAnyPct, customNoNumPct, theme]);
 
-  useEffect(() => { if (difficulty !== 'custom') newPuzzle(); }, [difficulty, theme]);
+  useEffect(() => {
+    if (hasRestoredGame.current) { hasRestoredGame.current = false; return; }
+    if (difficulty !== 'custom') newPuzzle();
+  }, [difficulty, theme]);
 
   const handleCustomDone = () => { setCustomPanelOpen(false); newPuzzle(); };
 
@@ -214,7 +253,6 @@ export default function App() {
         // Only solve when every cell filled AND every placed rect is correct
         const allFilled = newPG.every(row => row.every(v => v !== -1));
         const allCorrect = newPR.every(rect => rect.correct);
-        console.log('win check — allFilled:', allFilled, 'allCorrect:', allCorrect, 'rects:', newPR.map(r => r.correct));
         if (allFilled && allCorrect) {
           setSolved(true);
           setWinModalVisible(true);
