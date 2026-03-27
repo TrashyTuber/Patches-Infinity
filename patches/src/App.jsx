@@ -358,7 +358,7 @@ export default function App() {
           <div className="pb" style={{ width: `${progress}%` }}/>
         </div>
 
-        <div className="btn-row" style={{ width: GRID_SIZE }}>
+        <div className="btn-row" style={{ width: GRID_SIZE, marginBottom: 10 }}>
           <button className="ab" onClick={handleReset}>↺ Reset</button>
           <button className="nb" onClick={newPuzzle}>New puzzle</button>
         </div>
